@@ -1,7 +1,7 @@
 const gameboard = (() => {
   let boardLayout = [0, 1, 2, 3, 4, 5, 6, 7, 8];
   const initialBoardLayout = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-  const getLayout = () => boardLayout;
+  const getBoardArrayLayout = () => boardLayout;
   const checkWinningCombinations = (arr) => {
     // The function receives an array and checks wether that array is a winner
     if (
@@ -36,8 +36,9 @@ const gameboard = (() => {
     return false;
   };
 
-  const changeLayout = (mark, position) => {
+  const changeBoardArrayLayout = (mark, position) => {
     // Changes the layout while also looking for winners
+    if (boardLayout[position] === "x" || boardLayout[position] === "o") return;
     boardLayout[position] = mark;
     // maybe do this outside of here? TODO ?
     return checkWinner();
@@ -45,7 +46,7 @@ const gameboard = (() => {
   const resetBoard = () => {
     boardLayout = initialBoardLayout;
   };
-  return { getLayout, changeLayout, checkWinner, resetBoard };
+  return { getBoardArrayLayout, changeBoardArrayLayout, checkWinner, resetBoard };
 })();
 
 const createPlayer = (playerName, playerMark) => {
@@ -77,11 +78,13 @@ const displayController = (() => {
   const changeCell = (cellIndex, mark) => {
     // This takes the O or X svg and adds it to its inner html
     mark === "x" ? (mark = X) : (mark = O);
+    // only if there isnt some already
+    if (cells[cellIndex].innerHTML !== '') return "Can't change current cell"
     cells[cellIndex].innerHTML = mark;
   };
   const clearCells = () => {
     for (const c of cells) {
-      c.innerHTML = "";
+      c.innerHTML = '';
     }
   };
   return { changeCell, clearCells };
@@ -98,7 +101,7 @@ const game = (() => {
   const playRound = (cellClicked) => {
     if (lastPlay === "o") {
       // if this returns true, it will be a win
-      if (gameboard.changeLayout(playerOne.getMark(), cellClicked)) {
+      if (gameboard.changeBoardArrayLayout(playerOne.getMark(), cellClicked)) {
         newGame(playerOne);
         return;
       } else {
@@ -108,7 +111,7 @@ const game = (() => {
       }
     } else if (lastPlay === "x") {
       // if this returns true, it will be a win
-      if (gameboard.changeLayout(playerTwo.getMark(), cellClicked)) {
+      if (gameboard.changeBoardArrayLayout(playerTwo.getMark(), cellClicked)) {
         newGame(playerTwo);
         return;
       } else {
@@ -124,6 +127,8 @@ const game = (() => {
   for (const c of cells) {
     // Call the function with the cell id of the cell clicked
     c.addEventListener("click", () => {
+      // only if there isnt a mark already
+      if (c.innerHTML !== '') return;
       playRound(Number(c.id));
     });
   }
