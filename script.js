@@ -36,7 +36,7 @@ const gameboard = (() => {
     return false;
   };
 
-  const changeBoardLayout = (mark, position) => {
+  const changeLayout = (mark, position) => {
     // Changes the layout while also looking for winners
     boardLayout[position] = mark;
     // maybe do this outside of here? TODO ?
@@ -45,56 +45,80 @@ const gameboard = (() => {
   const resetBoard = () => {
     boardLayout = initialBoardLayout;
   };
-  return { getLayout, changeBoardLayout, checkWinner, resetBoard };
+  return { getLayout, changeLayout, checkWinner, resetBoard };
 })();
-
-// const displayController = (() => {
-//   let a = "add code";
-//   return { a };
-// })();
 
 const createPlayer = (playerName, playerMark) => {
   const name = playerName;
   const mark = playerMark;
   let score = 0;
-  const getPlayerName = () => name;
+  const getName = () => name;
 
-  const getPlayerMark = () => mark;
+  const getMark = () => mark;
 
-  const getPlayerScore = () => score;
+  const getScore = () => score;
 
-  const increasePlayerScore = () => score++;
+  const increaseScore = () => score++;
 
-  return { getPlayerName, getPlayerMark, getPlayerScore, increasePlayerScore };
+  return { getName, getMark, getScore, increaseScore };
 };
-const playerOne = createPlayer(prompt("Enter player x name: "), "x");
-const playerTwo = createPlayer(prompt("Enter player o name: "), "o");
+// const playerOne = createPlayer(prompt("Enter player x name: "), "x");
+// const playerTwo = createPlayer(prompt("Enter player o name: "), "o");
 const game = (() => {
   const newGame = (winner) => {
     gameboard.resetBoard();
-    console.log(`${winner} is the winner of the round!`)
+    winner.increaseScore();
+    console.log(`${winner.getName()} is the winner of the round!`);
   };
   let lastPlay = "o";
   const playRound = () => {
     if (lastPlay === "o") {
       // if this returns true, it will be a win
-      if (gameboard.changeBoardLayout("x", prompt("Player x: Enter array index: "))) {
-        playerOne.increasePlayerScore();
-        newGame(playerOne.getPlayerName());
+      if (
+        gameboard.changeLayout(
+          playerOne.getMark(),
+          prompt(`${playerOne.getName()}: Enter array index: `),
+        )
+      ) {
+        newGame(playerOne);
         return;
       } else {
-        lastPlay = "x";
+        lastPlay = playerOne.getMark();
       }
-    } else {
+    } else if (lastPlay === "x") {
       // if this returns true, it will be a win
-      if (gameboard.changeBoardLayout("o", prompt("Player o: Enter array index: "))) {
-        playerTwo.increasePlayerScore();
-        newGame(playerTwo.getPlayerName());
+      if (
+        gameboard.changeLayout(
+          playerTwo.getMark(),
+          prompt(`${playerTwo.getName()}: Enter array index: `),
+        )
+      ) {
+        newGame(playerTwo);
         return;
       } else {
-        lastPlay = "o";
+        lastPlay = playerTwo.getMark();
       }
     }
   };
   return { playRound };
+})();
+const displayController = (() => {
+  const X =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>alpha-x</title><path d="M9,7L11,12L9,17H11L12,14.5L13,17H15L13,12L15,7H13L12,9.5L11,7H9Z" /></svg>';
+  const O =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>alpha-o</title><path d="M11,7A2,2 0 0,0 9,9V15A2,2 0 0,0 11,17H13A2,2 0 0,0 15,15V9A2,2 0 0,0 13,7H11M11,9H13V15H11V9Z" /></svg>';
+  const cellsContainer = document.querySelector("#cells-container");
+  const cells = cellsContainer.children;
+  // Change the cell to add an svg
+  const changeCell = (cellIndex, mark) => {
+    // This takes the O or X svg and adds it to its inner html
+    mark === "x" ? (mark = X) : (mark = O);
+    cells[cellIndex].innerHTML = mark;
+  };
+  const clearCells = () => {
+    for (const c of cells) {
+      c.innerHTML = "";
+    }
+  };
+  return { changeCell, clearCells };
 })();
