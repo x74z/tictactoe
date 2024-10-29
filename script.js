@@ -62,46 +62,9 @@ const createPlayer = (playerName, playerMark) => {
 
   return { getName, getMark, getScore, increaseScore };
 };
-// const playerOne = createPlayer(prompt("Enter player x name: "), "x");
-// const playerTwo = createPlayer(prompt("Enter player o name: "), "o");
-const game = (() => {
-  const newGame = (winner) => {
-    gameboard.resetBoard();
-    winner.increaseScore();
-    console.log(`${winner.getName()} is the winner of the round!`);
-  };
-  let lastPlay = "o";
-  const playRound = () => {
-    if (lastPlay === "o") {
-      // if this returns true, it will be a win
-      if (
-        gameboard.changeLayout(
-          playerOne.getMark(),
-          prompt(`${playerOne.getName()}: Enter array index: `),
-        )
-      ) {
-        newGame(playerOne);
-        return;
-      } else {
-        lastPlay = playerOne.getMark();
-      }
-    } else if (lastPlay === "x") {
-      // if this returns true, it will be a win
-      if (
-        gameboard.changeLayout(
-          playerTwo.getMark(),
-          prompt(`${playerTwo.getName()}: Enter array index: `),
-        )
-      ) {
-        newGame(playerTwo);
-        return;
-      } else {
-        lastPlay = playerTwo.getMark();
-      }
-    }
-  };
-  return { playRound };
-})();
+const playerOne = createPlayer("player1.", "x")
+const playerTwo = createPlayer("playerx.", "o")
+
 const displayController = (() => {
   const X =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>alpha-x</title><path d="M9,7L11,12L9,17H11L12,14.5L13,17H15L13,12L15,7H13L12,9.5L11,7H9Z" /></svg>';
@@ -109,6 +72,7 @@ const displayController = (() => {
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>alpha-o</title><path d="M11,7A2,2 0 0,0 9,9V15A2,2 0 0,0 11,17H13A2,2 0 0,0 15,15V9A2,2 0 0,0 13,7H11M11,9H13V15H11V9Z" /></svg>';
   const cellsContainer = document.querySelector("#cells-container");
   const cells = cellsContainer.children;
+
   // Change the cell to add an svg
   const changeCell = (cellIndex, mark) => {
     // This takes the O or X svg and adds it to its inner html
@@ -121,4 +85,47 @@ const displayController = (() => {
     }
   };
   return { changeCell, clearCells };
+})();
+
+const game = (() => {
+  const newGame = (winner) => {
+    gameboard.resetBoard();
+    displayController.clearCells();
+    winner.increaseScore();
+    console.log(`${winner.getName()} is the winner of the round!, now you have ${winner.getScore()} points`);
+  };
+  let lastPlay = "o";
+  const playRound = (cellClicked) => {
+    if (lastPlay === "o") {
+      // if this returns true, it will be a win
+      if (gameboard.changeLayout(playerOne.getMark(), cellClicked)) {
+        newGame(playerOne);
+        return;
+      } else {
+        // This else statement is if noone won.
+        displayController.changeCell(cellClicked, playerOne.getMark());
+        lastPlay = playerOne.getMark();
+      }
+    } else if (lastPlay === "x") {
+      // if this returns true, it will be a win
+      if (gameboard.changeLayout(playerTwo.getMark(), cellClicked)) {
+        newGame(playerTwo);
+        return;
+      } else {
+        // This else statement is if noone won.
+        displayController.changeCell(cellClicked, playerTwo.getMark());
+        lastPlay = playerTwo.getMark();
+      }
+    }
+  };
+  const cellsContainer = document.querySelector("#cells-container");
+  const cells = cellsContainer.children;
+  // Add each cell event listener
+  for (const c of cells) {
+    // Call the function with the cell id of the cell clicked
+    c.addEventListener("click", () => {
+      playRound(Number(c.id));
+    });
+  }
+  return { playRound };
 })();
