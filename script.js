@@ -1,7 +1,13 @@
 const gameboard = (() => {
   let boardLayout = [0, 1, 2, 3, 4, 5, 6, 7, 8];
-  const initialBoardLayout = [0, 1, 2, 3, 4, 5, 6, 7, 8];
   const getBoardArrayLayout = () => boardLayout;
+  const checkTie = () => {
+    for (const i of boardLayout) {
+      if (typeof i === "number") return false;
+    }
+    // if none of them are a number, it is a tie
+    return true;
+  };
   const checkWinningCombinations = (arr) => {
     // The function receives an array and checks wether that array is a winner
     if (
@@ -44,9 +50,15 @@ const gameboard = (() => {
     return checkWinner();
   };
   const resetBoard = () => {
-    boardLayout = initialBoardLayout;
+    boardLayout = [0, 1, 2, 3, 4, 5, 6, 7, 8];
   };
-  return { getBoardArrayLayout, changeBoardArrayLayout, checkWinner, resetBoard };
+  return {
+    getBoardArrayLayout,
+    changeBoardArrayLayout,
+    checkWinner,
+    resetBoard,
+    checkTie,
+  };
 })();
 
 const createPlayer = (playerName, playerMark) => {
@@ -63,8 +75,8 @@ const createPlayer = (playerName, playerMark) => {
 
   return { getName, getMark, getScore, increaseScore };
 };
-const playerOne = createPlayer("player1.", "x")
-const playerTwo = createPlayer("playerx.", "o")
+const playerOne = createPlayer("player1.", "x");
+const playerTwo = createPlayer("playerx.", "o");
 
 const displayController = (() => {
   const X =
@@ -79,23 +91,28 @@ const displayController = (() => {
     // This takes the O or X svg and adds it to its inner html
     mark === "x" ? (mark = X) : (mark = O);
     // only if there isnt some already
-    if (cells[cellIndex].innerHTML !== '') return "Can't change current cell"
+    if (cells[cellIndex].innerHTML !== "") return "Can't change current cell";
     cells[cellIndex].innerHTML = mark;
   };
   const clearCells = () => {
     for (const c of cells) {
-      c.innerHTML = '';
+      c.innerHTML = "";
     }
   };
   return { changeCell, clearCells };
 })();
 
 const game = (() => {
-  const newGame = (winner) => {
+  const resetRoundOnTie = () => {
     gameboard.resetBoard();
     displayController.clearCells();
+  };
+  const newGame = (winner) => {
+    resetRoundOnTie();
     winner.increaseScore();
-    console.log(`${winner.getName()} is the winner of the round!, now you have ${winner.getScore()} points`);
+    console.log(
+      `${winner.getName()} is the winner of the round!, now you have ${winner.getScore()} points`,
+    );
   };
   let lastPlay = "o";
   const playRound = (cellClicked) => {
@@ -108,6 +125,7 @@ const game = (() => {
         // This else statement is if noone won.
         displayController.changeCell(cellClicked, playerOne.getMark());
         lastPlay = playerOne.getMark();
+        return;
       }
     } else if (lastPlay === "x") {
       // if this returns true, it will be a win
@@ -118,18 +136,23 @@ const game = (() => {
         // This else statement is if noone won.
         displayController.changeCell(cellClicked, playerTwo.getMark());
         lastPlay = playerTwo.getMark();
+        return;
       }
     }
+    // This part of the code will not be reached
   };
   const cellsContainer = document.querySelector("#cells-container");
   const cells = cellsContainer.children;
   // Add each cell event listener
   for (const c of cells) {
     // Call the function with the cell id of the cell clicked
-    c.addEventListener("click", () => {
-      // only if there isnt a mark already
-      if (c.innerHTML !== '') return;
+    c.addEventListener("pointerdown", () => {
+      // if this returns true there is a tie, so reset everything
+      if (c.innerHTML !== "")
+        // only if there isnt a mark already
+        return;
       playRound(Number(c.id));
+      if (gameboard.checkTie()) resetRoundOnTie();
     });
   }
   return { playRound };
