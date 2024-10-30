@@ -6,10 +6,7 @@ const gameboard = (() => {
   const getLastWinningCombination = () => lastWinningCombinationIndexes;
   const checkWinningCombinations = (arr) => {
     // The function receives an array and checks wether that array is a winner
-    if (
-      boardLayout[arr[0]] === boardLayout[arr[1]] &&
-      boardLayout[arr[1]] === boardLayout[arr[2]]
-    ) {
+    if (boardLayout[arr[0]] === boardLayout[arr[1]] &&boardLayout[arr[1]] === boardLayout[arr[2]]) {
       // Keep the last winning combination
       lastWinningCombinationIndexes = arr;
       return true;
@@ -17,16 +14,8 @@ const gameboard = (() => {
       return false;
     }
   };
-  const winningCombinations = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-  ];
+  const winningCombinations = [[0, 1, 2],[3, 4, 5],[6, 7, 8],[0, 4, 8],[2, 4, 6],[0, 3, 6],[1, 4, 7],[2, 5, 8]];
+  
   const checkWinner = () => {
     // For each winning combination it calls the function to see whether there is a winner
     for (const i of winningCombinations) {
@@ -80,25 +69,22 @@ const createPlayer = (playerName, playerMark) => {
   const mark = playerMark;
   let score = 0;
   const getName = () => name;
-
   const getMark = () => mark;
-
   const getScore = () => score;
-
   const increaseScore = () => score++;
-
   return { getName, getMark, getScore, increaseScore };
 };
+
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 
 const playerOne = createPlayer("player1.", "x");
 const playerTwo = createPlayer("playerx.", "o");
 
 const displayController = (() => {
-  const X =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>alpha-x</title><path d="M9,7L11,12L9,17H11L12,14.5L13,17H15L13,12L15,7H13L12,9.5L11,7H9Z" /></svg>';
-  const O =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>alpha-o</title><path d="M11,7A2,2 0 0,0 9,9V15A2,2 0 0,0 11,17H13A2,2 0 0,0 15,15V9A2,2 0 0,0 13,7H11M11,9H13V15H11V9Z" /></svg>';
+  const X = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>alpha-x</title><path d="M9,7L11,12L9,17H11L12,14.5L13,17H15L13,12L15,7H13L12,9.5L11,7H9Z" /></svg>';
+  const O ='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>alpha-o</title><path d="M11,7A2,2 0 0,0 9,9V15A2,2 0 0,0 11,17H13A2,2 0 0,0 15,15V9A2,2 0 0,0 13,7H11M11,9H13V15H11V9Z" /></svg>';
   const cellsContainer = document.querySelector("#cells-container");
   const cells = cellsContainer.children;
 
@@ -122,7 +108,7 @@ const displayController = (() => {
     }
     // After a wait of 2 seconds, reset the color back to normal
     await sleep(2000);
-
+    
     for (const index of cellIndexes) {
       cells[index].style.background = "black";
     }
@@ -141,22 +127,15 @@ const game = (() => {
     e.preventDefault();
     e.stopPropagation();
   };
-  const preventClick = () => {
-    document.addEventListener("pointerdown", handlePointerDown, true);
-  };
-  const allowClick = () => {
-    document.removeEventListener("pointerdown", handlePointerDown, true);
-  };
+  const preventClick = () => { document.addEventListener("pointerdown", handlePointerDown, true); };
+  const allowClick = () => { document.removeEventListener("pointerdown", handlePointerDown, true); };
   const resetRoundOnTie = async () => {
     // Do not allow clicks when you won, to prevent extra moves
     preventClick();
     // This allows player X to always be the first
     lastPlay = "o";
-    // Make all cells a certain color when there is a tie
-    await displayController.changeCellColor(
-      [0, 1, 2, 3, 4, 5, 6, 7, 8],
-      "orange",
-    );
+    // Make all cells a certain color when there is a tie, all positions in the array will be changed
+    await displayController.changeCellColor([0, 1, 2, 3, 4, 5, 6, 7, 8], "orange");
     // Change text to TIE
     displayController.changeWinnerText("Game was a TIE!");
     gameboard.resetBoard();
@@ -168,10 +147,7 @@ const game = (() => {
     // Do not allow clicks when won
     preventClick();
     // Change the cells that won to green, it await for it to go
-    await displayController.changeCellColor(
-      gameboard.getLastWinningCombination(),
-      "green",
-    );
+    await displayController.changeCellColor(gameboard.getLastWinningCombination(),"green");
     lastPlay = "o";
     gameboard.resetBoard();
     displayController.clearCells();
