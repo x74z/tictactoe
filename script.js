@@ -103,7 +103,10 @@ const displayController = (() => {
 })();
 
 const game = (() => {
+  let lastPlay = "o";
   const resetRoundOnTie = () => {
+    // Reset last play so it doesn't get O as player 1
+    lastPlay = "o";
     gameboard.resetBoard();
     displayController.clearCells();
   };
@@ -114,7 +117,6 @@ const game = (() => {
       `${winner.getName()} is the winner of the round!, now you have ${winner.getScore()} points`,
     );
   };
-  let lastPlay = "o";
   const playRound = (cellClicked) => {
     if (lastPlay === "o") {
       // if this returns true, it will be a win
