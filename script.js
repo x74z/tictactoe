@@ -1,13 +1,6 @@
 const gameboard = (() => {
   let boardLayout = [0, 1, 2, 3, 4, 5, 6, 7, 8];
   const getBoardArrayLayout = () => boardLayout;
-  const checkTie = () => {
-    for (const i of boardLayout) {
-      if (typeof i === "number") return false;
-    }
-    // if none of them are a number, it is a tie
-    return true;
-  };
 
   let lastWinningCombinationIndexes = "";
   const getLastWinningCombination = () => lastWinningCombinationIndexes;
@@ -43,7 +36,7 @@ const gameboard = (() => {
         continue;
       }
     }
-    // if nothing returns false
+    // if there are no winners return false
     return false;
   };
 
@@ -53,6 +46,19 @@ const gameboard = (() => {
     boardLayout[position] = mark;
     // maybe do this outside of here? TODO ?
     return checkWinner();
+  };
+  const checkTie = () => {
+    for (const i of boardLayout) {
+      // itirete trough the entire array to check if there are no numbers
+      if (typeof i === "number") return false;
+    }
+    // if there are no numbers and lastwiningcmb is "", which will be true if someone won, it returns false
+    // this prevents the game ending as a tie when all cells have been used
+    // Since the reset board happens after checking for a tie, this check works
+    // it must be checked before the resetBoard function
+    if (lastWinningCombinationIndexes !== "") return false;
+    // If there isnt an array, it was a tie so return true
+    return true;
   };
   const resetBoard = () => {
     boardLayout = [0, 1, 2, 3, 4, 5, 6, 7, 8];
@@ -100,7 +106,7 @@ const displayController = (() => {
   const changeCell = (cellIndex, mark) => {
     // This takes the O or X svg and adds it to its inner html
     mark === "x" ? (mark = X) : (mark = O);
-    // only if there isnt some already
+    // Will not add anything if there is already an element there
     if (cells[cellIndex].innerHTML !== "") return "Can't change current cell";
     cells[cellIndex].innerHTML = mark;
   };
@@ -110,6 +116,7 @@ const displayController = (() => {
     }
   };
   async function changeCellColor(cellIndexes, color) {
+    // Takes a color and changes the bgc to the color parameter
     for (const index of cellIndexes) {
       cells[index].style.background = color;
     }
@@ -130,6 +137,7 @@ const displayController = (() => {
 const game = (() => {
   let lastPlay = "o";
   const handlePointerDown = (e) => {
+    // Function required to be able to remove the Event listener later.
     e.preventDefault();
     e.stopPropagation();
   };
@@ -140,9 +148,9 @@ const game = (() => {
     document.removeEventListener("pointerdown", handlePointerDown, true);
   };
   const resetRoundOnTie = async () => {
-    // Do not allow clicks when won
+    // Do not allow clicks when you won, to prevent extra moves
     preventClick();
-    // Reset last play so it doesn't get O as player 1
+    // This allows player X to always be the first
     lastPlay = "o";
     // Make all cells a certain color when there is a tie
     await displayController.changeCellColor(
@@ -180,15 +188,16 @@ const game = (() => {
     // console.log(  `${winner.getName()} is the winner of the round!, now you have ${winner.getScore()} points`, );
   };
   const playRound = (cellClicked) => {
+    // This checks who player last, and makes a play accordingly
     if (lastPlay === "o") {
       // if this returns true, it will be a win
       if (gameboard.changeBoardArrayLayout(playerOne.getMark(), cellClicked)) {
-        // Call the function even if you won, so you get to see the wining combination
+        // Call the function even if you won, so you get to see the wining combination, without this, it will show up empty
         displayController.changeCell(cellClicked, playerOne.getMark());
         newGame(playerOne);
         return;
       } else {
-        // This else statement is if noone won.
+        // This else statement is if noone won. Add the mark and changes the last play
         displayController.changeCell(cellClicked, playerOne.getMark());
         lastPlay = playerOne.getMark();
         return;
@@ -196,30 +205,30 @@ const game = (() => {
     } else if (lastPlay === "x") {
       // if this returns true, it will be a win
       if (gameboard.changeBoardArrayLayout(playerTwo.getMark(), cellClicked)) {
-        // Call the function even if you won, so you get to see the wining combination
+        // Call the function even if you won, so you get to see the wining combination, without this, it will show up empty
         displayController.changeCell(cellClicked, playerTwo.getMark());
         newGame(playerTwo);
         return;
       } else {
-        // This else statement is if noone won.
+        // This else statement is if noone won. Add the mark and changes the last play
         displayController.changeCell(cellClicked, playerTwo.getMark());
         lastPlay = playerTwo.getMark();
         return;
       }
     }
-    // This part of the code will not be reached
   };
   const cellsContainer = document.querySelector("#cells-container");
   const cells = cellsContainer.children;
-  // Add each cell event listener
+
+  // Add each cell event listener for a click
   for (const c of cells) {
     // Call the function with the cell id of the cell clicked
     c.addEventListener("pointerdown", () => {
-      // if this returns true there is a tie, so reset everything
-      if (c.innerHTML !== "")
-        // only if there isnt a mark already
-        return;
+      // If there is something inside the cell, the event listener returns, preventing overwriting any cells
+      if (c.innerHTML !== "") return;
       playRound(Number(c.id));
+      // if this returns true there is a tie, so reset everything.
+      // the check inside checkTie prevents a tie when all cell have been used, even if someone won.
       if (gameboard.checkTie()) resetRoundOnTie();
     });
   }
