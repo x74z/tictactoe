@@ -102,3 +102,10 @@ body {
   grid-template-rows: repeat(3, 1fr);
   grid-template-columns: repeat(3, 1fr);
 }
+
+#winner-text{
+  font-size: 3rem;
+  color: white;
+  font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+  margin-top: 40px;
+}

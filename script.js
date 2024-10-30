@@ -8,12 +8,17 @@ const gameboard = (() => {
     // if none of them are a number, it is a tie
     return true;
   };
+
+  let lastWinningCombinationIndexes = "";
+  const getLastWinningCombination = () => lastWinningCombinationIndexes;
   const checkWinningCombinations = (arr) => {
     // The function receives an array and checks wether that array is a winner
     if (
       boardLayout[arr[0]] === boardLayout[arr[1]] &&
       boardLayout[arr[1]] === boardLayout[arr[2]]
     ) {
+      // Keep the last winning combination
+      lastWinningCombinationIndexes = arr;
       return true;
     } else {
       return false;
@@ -51,6 +56,8 @@ const gameboard = (() => {
   };
   const resetBoard = () => {
     boardLayout = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+    // Also reset last wining combination
+    lastWinningCombinationIndexes = "";
   };
   return {
     getBoardArrayLayout,
@@ -58,6 +65,7 @@ const gameboard = (() => {
     checkWinner,
     resetBoard,
     checkTie,
+    getLastWinningCombination,
   };
 })();
 
@@ -75,6 +83,8 @@ const createPlayer = (playerName, playerMark) => {
 
   return { getName, getMark, getScore, increaseScore };
 };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
 const playerOne = createPlayer("player1.", "x");
 const playerTwo = createPlayer("playerx.", "o");
 
@@ -99,28 +109,82 @@ const displayController = (() => {
       c.innerHTML = "";
     }
   };
-  return { changeCell, clearCells };
+  async function changeCellColor(cellIndexes, color) {
+    for (const index of cellIndexes) {
+      cells[index].style.background = color;
+    }
+    // After a wait of 2 seconds, reset the color back to normal
+    await sleep(2000);
+
+    for (const index of cellIndexes) {
+      cells[index].style.background = "black";
+    }
+  }
+  const changeWinnerText = (txt) => {
+    const textField = document.querySelector("#winner-text");
+    textField.innerText = txt;
+  };
+  return { changeCell, clearCells, changeCellColor, changeWinnerText };
 })();
 
 const game = (() => {
   let lastPlay = "o";
-  const resetRoundOnTie = () => {
+  const handlePointerDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const preventClick = () => {
+    document.addEventListener("pointerdown", handlePointerDown, true);
+  };
+  const allowClick = () => {
+    document.removeEventListener("pointerdown", handlePointerDown, true);
+  };
+  const resetRoundOnTie = async () => {
+    // Do not allow clicks when won
+    preventClick();
     // Reset last play so it doesn't get O as player 1
+    lastPlay = "o";
+    // Make all cells a certain color when there is a tie
+    await displayController.changeCellColor(
+      [0, 1, 2, 3, 4, 5, 6, 7, 8],
+      "orange",
+    );
+    // Change text to TIE
+    displayController.changeWinnerText("Game was a TIE!");
+    gameboard.resetBoard();
+    displayController.clearCells();
+    // Allow clicks again
+    allowClick();
+  };
+  const resetRoundOnWin = async (winner) => {
+    // Do not allow clicks when won
+    preventClick();
+    // Change the cells that won to green, it await for it to go
+    await displayController.changeCellColor(
+      gameboard.getLastWinningCombination(),
+      "green",
+    );
     lastPlay = "o";
     gameboard.resetBoard();
     displayController.clearCells();
-  };
-  const newGame = (winner) => {
-    resetRoundOnTie();
-    winner.increaseScore();
-    console.log(
-      `${winner.getName()} is the winner of the round!, now you have ${winner.getScore()} points`,
+    displayController.changeWinnerText(
+      `${winner.getMark().toUpperCase()} is the winner!
+      Now you have ${winner.getScore()} points!`,
     );
+    // Allow clicks again
+    allowClick();
+  };
+  const newGame = async (winner) => {
+    winner.increaseScore();
+    resetRoundOnWin(winner);
+    // console.log(  `${winner.getName()} is the winner of the round!, now you have ${winner.getScore()} points`, );
   };
   const playRound = (cellClicked) => {
     if (lastPlay === "o") {
       // if this returns true, it will be a win
       if (gameboard.changeBoardArrayLayout(playerOne.getMark(), cellClicked)) {
+        // Call the function even if you won, so you get to see the wining combination
+        displayController.changeCell(cellClicked, playerOne.getMark());
         newGame(playerOne);
         return;
       } else {
@@ -132,6 +196,8 @@ const game = (() => {
     } else if (lastPlay === "x") {
       // if this returns true, it will be a win
       if (gameboard.changeBoardArrayLayout(playerTwo.getMark(), cellClicked)) {
+        // Call the function even if you won, so you get to see the wining combination
+        displayController.changeCell(cellClicked, playerTwo.getMark());
         newGame(playerTwo);
         return;
       } else {
